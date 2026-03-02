@@ -689,6 +689,9 @@
 
     <div class="game-stage">
         <div class="board-container">
+            <div style="background: linear-gradient(to right, #000, #5d4037); color: #fff; padding: 12px; text-align: center; font-family: 'Cinzel', serif; font-weight: 700; font-size: 1rem; border-bottom: 2px solid var(--brass-primary); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; border-radius: 4px 4px 0 0;">GAME BOARD</div>
+            
+            
             <div id="stage-title" class="stage-title-display">Stage Title Loading...</div>
             <div id="stage-desc" class="stage-description"></div>
             
@@ -1424,72 +1427,51 @@
         }
 
         function initChipInteractions() {
-            document.querySelectorAll('.chip').forEach(chip => {
-                chip.onclick = null;
-                chip.onpointerdown = null;
-            });
-            
-            document.querySelectorAll('.drop-zone').forEach(zone => {
-                zone.onclick = null;
-                zone.onpointerdown = null;
-            });
-            
-            document.querySelectorAll('.inventory-pool .chip').forEach(chip => {
-                chip.onclick = (e) => {
-                    e.stopPropagation();
-                    handleChipClick(chip);
-                };
-                chip.onpointerdown = (e) => {
-                    if (e.button === 0) {
-                        handleDragStart(e, chip);
-                    }
-                };
-            });
-            
-            document.querySelectorAll('.drop-zone .chip').forEach(chip => {
-                chip.onclick = (e) => {
-                    e.stopPropagation();
-                    handleChipClick(chip);
-                };
-                chip.onpointerdown = (e) => {
-                    if (e.button === 0) {
-                        handleDragStart(e, chip);
-                    }
-                };
-            });
-            
-            document.querySelectorAll('.drop-zone').forEach(zone => {
-                zone.onclick = (e) => {
-                    e.stopPropagation();
-                    handleZoneClick(zone);
-                };
-            });
-            
-            const pool = document.getElementById('pool');
-            if(pool) {
-                pool.onclick = (e) => {
-                    if(e.target === pool || e.target.classList.contains('inventory-pool')) {
-                        if(selectedChip) {
-                            playClick();
-                            const wasInZone = selectedChip.parentElement && selectedChip.parentElement.classList.contains('drop-zone');
-                            
-                            const newChip = createChip(selectedChip.innerText);
-                            pool.appendChild(newChip);
-                            initChipInteractions();
-                            
-                            if(wasInZone) {
-                                selectedChip.remove();
-                            }
-                            
-                            selectedChip.classList.remove('selected');
-                            selectedChip = null;
-                            saveCurrentStageState();
-                        }
-                    }
-                };
+    // Remove all existing handlers
+    document.querySelectorAll('.chip').forEach(chip => {
+        chip.onclick = null;
+        chip.onpointerdown = null;
+    });
+    
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+        zone.onclick = null;
+    });
+    
+    // Add click handlers to ALL chips (both in inventory AND in drop zones)
+    document.querySelectorAll('.chip').forEach(chip => {
+        chip.onclick = (e) => {
+            e.stopPropagation();
+            handleChipClick(chip);
+        };
+        chip.onpointerdown = (e) => {
+            if (e.button === 0) {
+                handleDragStart(e, chip);
             }
-        }
-
+        };
+    });
+    
+    // Add click handlers to ALL drop zones
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+        zone.onclick = (e) => {
+            e.stopPropagation();
+            handleZoneClick(zone);
+        };
+    });
+    
+    // Handle clicks on the pool background (deselect)
+    const pool = document.getElementById('pool');
+    if(pool) {
+        pool.onclick = (e) => {
+            if(e.target === pool || e.target.classList.contains('inventory-pool')) {
+                if(selectedChip) {
+                    selectedChip.classList.remove('selected');
+                    selectedChip = null;
+                    playClick();
+                }
+            }
+        };
+    }
+}
         function shuffleArray(array) { 
             for (let i = array.length - 1; i > 0; i--) { 
                 const j = Math.floor(Math.random() * (i + 1)); 
