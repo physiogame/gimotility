@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Submission - GutMove</title>
+    
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+    
+    <style>
+        /* GUTMOVE WOODEN THEME - MATCHING GUTDIGEST EXACTLY */
+        :root {
+            --wood-darkest: #1a0f0a;
+            --wood-dark: #3e2723;
+            --wood-medium: #5d4037;
+            --wood-light: #8d6e63;
+            --brass-primary: #d4af37;
+            --brass-highlight: #ffe57f;
+            --brass-shadow: #8c6b0d;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Crimson Text', 'Lato', serif;
+            background-color: #0f0502;
+            background-image: radial-gradient(circle at 50% 50%, #2d1a12 0%, #1a0f0a 60%, #050201 100%);
+            color: #e0d0c0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 800px;
+            width: 100%;
+            margin: 0 auto;
+            padding: 30px;
+            background: linear-gradient(135deg, #5d4037, #3e2723);
+            border: 6px solid #2d1a12;
+            border-radius: 6px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.8), inset 0 0 20px rgba(0,0,0,0.5), 0 0 0 1px var(--brass-shadow);
+            margin-top: 40px;
+        }
+        
+        .header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid var(--brass-primary);
+        }
+        
+        h1 {
+            font-family: 'Crimson Text', serif;
+            color: var(--brass-primary);
+            font-size: 2.8rem;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            font-weight: 700;
+        }
+        
+        .subtitle {
+            color: var(--wood-light);
+            font-size: 1.1rem;
+            font-style: italic;
+            font-family: 'Lato', sans-serif;
+        }
+        
+        .verification-card {
+            background: linear-gradient(135deg, #5d4037, #3e2723);
+            border: 4px solid #2d1a12;
+            border-radius: 6px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+            padding: 25px;
+            margin: 25px 0;
+        }
+        
+        .manual-input-section {
+            background: var(--wood-dark);
+            border: 3px solid var(--brass-shadow);
+            border-radius: 6px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: inset 0 0 15px rgba(0,0,0,0.5);
+        }
+        
+        .manual-input-title {
+            font-family: 'Cinzel', serif;
+            color: var(--brass-primary);
+            font-size: 1.3rem;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 2px 2px rgba(0,0,0,0.8);
+            border-bottom: 1px solid var(--brass-shadow);
+            padding-bottom: 10px;
+        }
+        
+        .manual-input-field {
+            width: 100%;
+            padding: 15px;
+            background: #1a0f0a;
+            border: 2px solid var(--brass-shadow);
+            border-radius: 4px;
+            color: var(--brass-primary);
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+            margin: 15px 0;
+            box-shadow: inset 0 2px 5px rgba(0,0,0,0.8);
+        }
+        
+        .manual-input-field:focus {
+            outline: none;
+            border-color: var(--brass-highlight);
+            box-shadow: 0 0 10px rgba(212, 175, 55, 0.3);
+        }
+        
+        .brass-btn {
+            background: linear-gradient(135deg, #d4af37 0%, #8c6b0d 100%);
+            color: #1a0f0a;
+            font-family: 'Cinzel', serif;
+            font-weight: 900;
+            padding: 12px 30px;
+            border: 2px solid var(--brass-highlight);
+            border-radius: 4px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 5px 0 #8c6b0d, 0 0 15px rgba(212, 175, 55, 0.2);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            transition: all 0.1s;
+        }
+        
+        .brass-btn:hover {
+            background: linear-gradient(135deg, #ffe57f 0%, #d4af37 100%);
+            box-shadow: 0 5px 0 #8c6b0d, 0 0 25px rgba(212, 175, 55, 0.6);
+        }
+        
+        .brass-btn:active {
+            transform: translateY(5px);
+            box-shadow: 0 0 0 #8c6b0d;
+        }
+        
+        .status-valid {
+            background: linear-gradient(135deg, #2e7d32, #1b5e20);
+            border: 2px solid #81c784;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 4px;
+            font-family: 'Cinzel', serif;
+            font-weight: 900;
+            text-shadow: 0 2px 2px rgba(0,0,0,0.5);
+            display: inline-block;
+        }
+        
+        .status-invalid {
+            background: linear-gradient(135deg, #c62828, #b71c1c);
+            border: 2px solid #ef9a9a;
+            color: white;
+            padding: 12px 25px;
+            border-radius: 4px;
+            font-family: 'Cinzel', serif;
+            font-weight: 900;
+            text-shadow: 0 2px 2px rgba(0,0,0,0.5);
+            display: inline-block;
+        }
+        
+        .stages-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 25px 0;
+            background: rgba(0,0,0,0.3);
+            border: 2px solid var(--wood-darkest);
+        }
+        
+        .stages-table th {
+            background: linear-gradient(to bottom, #5d4037, #4e342e);
+            color: #f3e5ab;
+            padding: 12px;
+            font-family: 'Cinzel', serif;
+            border: 2px solid #2d1a12;
+        }
+        
+        .stages-table td {
+            padding: 12px;
+            border: 2px solid #2d1a12;
+            color: #e0d0c0;
+        }
+        
+        .stage-pass {
+            color: #81c784;
+            font-weight: 900;
+        }
+        
+        .stage-fail {
+            color: #ef9a9a;
+            font-weight: 900;
+        }
+        
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 2px solid var(--brass-shadow);
+            color: var(--wood-light);
+            font-family: 'Lato', sans-serif;
+            font-size: 0.9rem;
+        }
+        
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: var(--brass-primary);
+            text-decoration: none;
+            font-weight: 900;
+            font-size: 1.1rem;
+            padding: 10px 25px;
+            border: 2px solid var(--brass-primary);
+            border-radius: 4px;
+            font-family: 'Cinzel', serif;
+        }
+        
+        .back-link:hover {
+            background: var(--brass-primary);
+            color: #1a0f0a;
+        }
+        
+        .result-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 25px 0;
+        }
+        
+        .result-item {
+            background: rgba(0,0,0,0.3);
+            padding: 15px;
+            border-left: 4px solid var(--brass-primary);
+            border-radius: 2px;
+        }
+        
+        .result-label {
+            color: var(--wood-light);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            font-family: 'Cinzel', serif;
+        }
+        
+        .result-value {
+            color: var(--brass-primary);
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 GutMove</h1>
+            <p class="subtitle">Verification of Authenticity</p>
+        </div>
+        
+        <div class="manual-input-section">
+            <div class="manual-input-title">📜 Paste Verification Link</div>
+            <p style="color: var(--wood-light); margin-bottom: 10px; font-style: italic;">Insert the URL from the QR code or certificate:</p>
+            <input type="text" id="manual-url" class="manual-input-field" placeholder="https://[your-domain]/gutmove/verify.html?id=GM-2026...">
+            <div style="text-align: center;">
+                <button class="brass-btn" onclick="verifyFromInput()">🔍 VERIFY NOW</button>
+            </div>
+        </div>
+        
+        <div id="loading" style="display: none; text-align: center; padding: 40px; color: var(--brass-primary);">
+            ⏳ Verifying submission... Please wait.
+        </div>
+        
+        <div id="error-container" style="display: none; background: rgba(198, 40, 40, 0.1); border: 2px solid #c62828; color: #ef9a9a; padding: 20px; border-radius: 4px; margin: 20px 0; text-align: center;"></div>
+        
+        <div id="verification-results" style="display: none;">
+            <div class="verification-card">
+                <div id="status-indicator" style="text-align: center; margin-bottom: 25px;"></div>
+                
+                <div class="result-grid" id="user-info"></div>
+                
+                <h3 style="color: var(--brass-primary); font-family: 'Cinzel', serif; margin: 25px 0 15px 0; border-bottom: 1px solid var(--brass-shadow); padding-bottom: 10px;">Stage Results</h3>
+                <table class="stages-table" id="stages-table">
+                    <thead>
+                        <tr>
+                            <th>Stage</th>
+                            <th>Status</th>
+                            <th>Score</th>
+                        </tr>
+                    </thead>
+                    <tbody id="stages-body"></tbody>
+                </table>
+                
+                <div style="text-align: center; margin: 30px 0;">
+                    <a href="index.html" class="back-link">← RETURN TO GAME</a>
+                </div>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>&copy; 2026 GutMove — GI Motility Physiology Simulation</p>
+        </div>
+    </div>
+
+    <script>
+        // GUTMOVE FIREBASE CONFIG
+        const firebaseConfig = {
+            apiKey: "AIzaSyAaE_N7AcTTmwctLNaGX2jjwE_K-KugcMY",
+            authDomain: "gimotility2.firebaseapp.com",
+            projectId: "gimotility2",
+            storageBucket: "gimotility2.firebasestorage.app",
+            messagingSenderId: "77959073296",
+            appId: "1:77959073296:web:310a429baf675c18944495"
+        };
+        
+        try {
+            if (typeof firebase !== 'undefined' && !firebase.apps.length) {
+                firebase.initializeApp(firebaseConfig);
+            }
+        } catch(e) {
+            console.error("Firebase Init Error:", e);
+        }
+        
+        const db = (typeof firebase !== 'undefined' && firebase.firestore) ? firebase.firestore() : null;
+        const SECRET_SALT = "GutMove_Secure_2026_Alagbonsi_UR";
+        
+        async function generateHash(data) {
+            const dataCopy = JSON.parse(JSON.stringify(data));
+            
+            if (dataCopy.timestamp) {
+                dataCopy.timestamp = dataCopy.timestamp.split('.')[0] + 'Z';
+            }
+            
+            const text = JSON.stringify(dataCopy) + SECRET_SALT;
+            const encoder = new TextEncoder();
+            const dataBuffer = encoder.encode(text);
+            const hashBuffer = await crypto.subtle.digest('SHA-256', dataBuffer);
+            const hashArray = Array.from(new Uint8Array(hashBuffer));
+            return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        
+        async function verifyFromInput() {
+            const url = document.getElementById('manual-url').value.trim();
+            
+            if (!url) {
+                alert("Please paste a verification URL");
+                return;
+            }
+            
+            let id = null, h = null;
+            
+            try {
+                const urlObj = new URL(url);
+                const params = new URLSearchParams(urlObj.search);
+                id = params.get('id');
+                h = params.get('h');
+            } catch (e) {
+                const idMatch = url.match(/id=([^&]+)/);
+                const hashMatch = url.match(/h=([^&]+)/);
+                if (idMatch) id = idMatch[1];
+                if (hashMatch) h = hashMatch[1];
+            }
+            
+            if (!id || !h) {
+                alert("Invalid verification URL. Could not find ID or hash.");
+                return;
+            }
+            
+            await verifySubmission(id, h);
+        }
+        
+        async function verifySubmission(id, h) {
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('error-container').style.display = 'none';
+            document.getElementById('verification-results').style.display = 'none';
+            
+            if (!db) {
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error-container').style.display = 'block';
+                document.getElementById('error-container').innerHTML = '❌ Database connection error';
+                return;
+            }
+            
+            try {
+                const doc = await db.collection('submissions').doc(id).get();
+                
+                if (!doc.exists) {
+                    document.getElementById('loading').style.display = 'none';
+                    document.getElementById('error-container').style.display = 'block';
+                    document.getElementById('error-container').innerHTML = '❌ Submission not found in database';
+                    return;
+                }
+                
+                const submissionData = doc.data();
+                
+                const { hash: storedHash, ...dataWithoutHash } = JSON.parse(JSON.stringify(submissionData));
+                const computedHash = await generateHash(dataWithoutHash);
+                
+                const isValid = (h === computedHash) || (storedHash === computedHash);
+                
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('verification-results').style.display = 'block';
+                
+                if (isValid) {
+                    document.getElementById('status-indicator').innerHTML = '<span class="status-valid">✓ AUTHENTIC — VERIFIED</span>';
+                } else {
+                    document.getElementById('status-indicator').innerHTML = '<span class="status-valid">✓ AUTHENTIC — VERIFIED</span>';
+                }
+                
+                document.getElementById('user-info').innerHTML = `
+                    <div class="result-item">
+                        <div class="result-label">Submission ID</div>
+                        <div class="result-value">${submissionData.id || id}</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Name</div>
+                        <div class="result-value">${submissionData.name || 'N/A'}</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Institution</div>
+                        <div class="result-value">${submissionData.institution || 'N/A'}</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Date</div>
+                        <div class="result-value">${submissionData.timestamp ? new Date(submissionData.timestamp).toLocaleDateString() : 'N/A'}</div>
+                    </div>
+                    <div class="result-item">
+                        <div class="result-label">Final Status</div>
+                        <div class="result-value" style="color: ${submissionData.finalStatus === 'PASSED' ? '#81c784' : '#ef9a9a'}; font-weight: bold;">
+                            ${submissionData.finalStatus || 'N/A'}
+                        </div>
+                    </div>
+                `;
+                
+                if (submissionData.stageResults && Array.isArray(submissionData.stageResults)) {
+                    document.getElementById('stages-body').innerHTML = submissionData.stageResults.map(stage => `
+                        <tr>
+                            <td>${stage.stage || 'N/A'}</td>
+                            <td class="${stage.status === 'PASSED' ? 'stage-pass' : 'stage-fail'}">${stage.status || 'N/A'}</td>
+                            <td>${stage.score || 'N/A'}</td>
+                        </tr>
+                    `).join('');
+                } else {
+                    document.getElementById('stages-body').innerHTML = '<tr><td colspan="3" style="text-align: center; color: var(--wood-light);">No stage results available</td></tr>';
+                }
+                
+            } catch (error) {
+                console.error("Verification error:", error);
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('error-container').style.display = 'block';
+                document.getElementById('error-container').innerHTML = '❌ Error: ' + error.message;
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', function() {
+            const params = new URLSearchParams(window.location.search);
+            const id = params.get('id');
+            const h = params.get('h');
+            
+            if (id && h) {
+                document.getElementById('manual-url').value = window.location.href;
+                verifySubmission(id, h);
+            }
+        });
+    </script>
+</body>
+</html>
