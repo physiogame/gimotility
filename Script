@@ -1637,7 +1637,7 @@
                         document.getElementById('auth-screen').style.display = 'none';
                         document.getElementById('verify-screen').style.display = 'flex';
                     }
-                }).catch(e => { 
+        ).catch(e => { 
                     errorDiv.innerText = e.message; 
                     gmAlert('Login Error', e.message, 'OK');
                 });
